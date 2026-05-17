@@ -75,8 +75,15 @@ userSchema.methods.deleteCartItem = function (productId) {
 };
 
 userSchema.methods.addOrder = async function () {
-  await Order.create({
-    items: this.cart.items,
+  if (!this.cart.items.length) {
+    throw new Error('Cart is empty');
+  }
+
+  const order = await Order.create({
+    items: this.cart.items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity
+    })),
     user: {
       _id: this._id,
       name: this.name,
@@ -86,11 +93,15 @@ userSchema.methods.addOrder = async function () {
 
   this.cart.items = [];
 
-  return this.save();
+  await this.save();
+
+  return order;
 };
 
 userSchema.statics.fetchOrders = function (userId) {
-  return Order.find({ 'user._id': userId }).sort({ createdAt: -1 });
+  return Order.find({ 'user._id': userId })
+    .populate('items.productId')
+    .sort({ createdAt: -1 });
 };
 
 module.exports = mongoose.model('User', userSchema);

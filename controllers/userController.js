@@ -121,11 +121,13 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    await user.addOrder();
+    const order = await user.addOrder();
 
     res.status(201).json({
       success: true,
-      message: 'Order placed successfully'
+      message: 'Order placed successfully',
+      order,
+      user
     });
 
   } catch (err) {

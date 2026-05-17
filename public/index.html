@@ -21,6 +21,7 @@
         <button class="nav-tab active" type="button" data-view="shop">Shop</button>
         <button class="nav-tab" type="button" data-view="admin">Admin</button>
         <button class="nav-tab" type="button" data-view="customer">Customer</button>
+        <button class="nav-tab" type="button" data-view="orders">Orders</button>
       </nav>
 
       <section class="panel user-panel" aria-labelledby="active-user-title">
@@ -127,10 +128,12 @@
             <button id="placeOrderBtn" class="primary-button full-width" type="button">Place Order</button>
           </section>
         </div>
+      </section>
 
+      <section id="ordersView" class="view" aria-labelledby="orders-heading">
         <section class="panel orders-panel">
           <div class="panel-heading">
-            <h3>Orders</h3>
+            <h3 id="orders-heading">Orders</h3>
             <button id="refreshOrdersBtn" class="link-button" type="button">Reload orders</button>
           </div>
           <div id="ordersList" class="orders-list"></div>

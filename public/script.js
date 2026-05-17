@@ -7,13 +7,15 @@ const state = {
 const views = {
   shop: document.querySelector('#shopView'),
   admin: document.querySelector('#adminView'),
-  customer: document.querySelector('#customerView')
+  customer: document.querySelector('#customerView'),
+  orders: document.querySelector('#ordersView')
 };
 
 const viewTitles = {
   shop: 'Shop',
   admin: 'Admin',
-  customer: 'Customer'
+  customer: 'Customer',
+  orders: 'Orders'
 };
 
 const productGrid = document.querySelector('#productGrid');
@@ -82,6 +84,28 @@ function escapeHtml(value) {
 
 function findProduct(id) {
   return state.products.find((product) => String(productIdOf(product)) === String(id));
+}
+
+function cartProductIdOf(item) {
+  return item.productId?._id || item.productId;
+}
+
+function cartProductTitleOf(item) {
+  if (item.productId && typeof item.productId === 'object') {
+    return item.productId.title;
+  }
+
+  const product = findProduct(cartProductIdOf(item));
+  return product ? product.title : 'Unknown product';
+}
+
+function cartProductPriceOf(item) {
+  if (item.productId && typeof item.productId === 'object') {
+    return item.productId.price;
+  }
+
+  const product = findProduct(cartProductIdOf(item));
+  return product ? product.price : null;
 }
 
 function setView(viewName) {
@@ -196,10 +220,9 @@ function renderCart() {
 
   document.querySelector('#placeOrderBtn').disabled = false;
   cartList.innerHTML = items.map((item) => {
-    const productId = String(item.productId);
-    const product = findProduct(productId);
-    const title = product ? product.title : 'Unknown product';
-    const price = product ? money(product.price) : 'Price unavailable';
+    const productId = String(cartProductIdOf(item));
+    const title = cartProductTitleOf(item);
+    const price = cartProductPriceOf(item);
 
     return `
       <article class="cart-row">
@@ -210,7 +233,7 @@ function renderCart() {
           </div>
           <span class="status-pill">Qty ${item.quantity}</span>
         </header>
-        <p>${price}</p>
+        <p>${price === null ? 'Price unavailable' : money(price)}</p>
         <button class="danger-button" type="button" data-action="remove-cart" data-id="${productId}">Remove</button>
       </article>
     `;
@@ -241,11 +264,11 @@ function renderOrders(orders = []) {
         <p>${escapeHtml(createdAt)}</p>
         <ul class="order-items">
           ${items.map((item) => {
-            const productId = String(item.productId);
-            const product = findProduct(productId);
+            const productId = String(cartProductIdOf(item));
+            const title = cartProductTitleOf(item);
             return `
               <li>
-                <span>${escapeHtml(product ? product.title : productId)}</span>
+                <span>${escapeHtml(title || productId)}</span>
                 <strong>Qty ${item.quantity}</strong>
               </li>
             `;
@@ -460,12 +483,15 @@ document.querySelector('#placeOrderBtn').addEventListener('click', async () => {
   }
 
   try {
-    await api('/orders', {
+    const data = await api('/orders', {
       method: 'POST',
       body: JSON.stringify({ userId: state.activeUser._id })
     });
 
-    await loadUser(state.activeUser._id);
+    state.activeUser = data.user || state.activeUser;
+    renderUser();
+    await loadOrders();
+    setView('orders');
     showToast('Order placed');
   } catch (error) {
     showToast(error.message, 'error');
