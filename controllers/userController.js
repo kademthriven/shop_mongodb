@@ -77,3 +77,52 @@ exports.deleteCartItem = async (req, res) => {
     message: 'Product removed from cart'
   });
 };
+exports.createOrder = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const userData = await User.findUserById(userId);
+
+    const user = new User(
+      userData.name,
+      userData.email,
+      userData._id,
+      userData.cart
+    );
+
+    await user.addOrder();
+
+    res.status(201).json({
+      success: true,
+      message: 'Order placed successfully'
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+exports.fetchOrders = async (req, res) => {
+  try {
+
+    const userId = req.params.userId;
+
+    const orders = await User.fetchOrders(userId);
+
+    res.status(200).json({
+      success: true,
+      orders
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};

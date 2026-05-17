@@ -6,12 +6,10 @@ class User {
     this.name = name;
     this.email = email;
 
-    // DEFAULT CART
     this.cart = cart || {
       items: []
     };
 
-    // USER ID
     if (id) {
       this._id = new ObjectId(id);
     }
@@ -39,43 +37,31 @@ class User {
 
   // ADD PRODUCT TO CART
   async addToCart(product) {
-
-    // CHECK PRODUCT EXISTS OR NOT
     const cartProductIndex = this.cart.items.findIndex(item => {
       return item.productId.toString() === product._id.toString();
     });
 
-    // COPY OLD ITEMS
     const updatedCartItems = [...this.cart.items];
 
-    // PRODUCT ALREADY EXISTS
     if (cartProductIndex >= 0) {
-
       updatedCartItems[cartProductIndex].quantity =
         updatedCartItems[cartProductIndex].quantity + 1;
-
     } else {
-
-      // NEW PRODUCT
       updatedCartItems.push({
         productId: product._id,
         quantity: 1
       });
     }
 
-    // UPDATED CART
-    const updatedCart = {
-      items: updatedCartItems
-    };
-
     const db = getDb();
 
-    // UPDATE DATABASE
     return db.collection('users').updateOne(
       { _id: this._id },
       {
         $set: {
-          cart: updatedCart
+          cart: {
+            items: updatedCartItems
+          }
         }
       }
     );
@@ -83,28 +69,59 @@ class User {
 
   // DELETE PRODUCT FROM CART
   async deleteCartItem(productId) {
-
-    // REMOVE PRODUCT
     const updatedCartItems = this.cart.items.filter(item => {
       return item.productId.toString() !== productId.toString();
     });
 
-    // UPDATED CART
-    const updatedCart = {
-      items: updatedCartItems
-    };
-
     const db = getDb();
 
-    // UPDATE DATABASE
     return db.collection('users').updateOne(
       { _id: this._id },
       {
         $set: {
-          cart: updatedCart
+          cart: {
+            items: updatedCartItems
+          }
         }
       }
     );
+  }
+
+  // CREATE ORDER FROM CART
+  async addOrder() {
+    const db = getDb();
+
+    const order = {
+      items: this.cart.items,
+      user: {
+        _id: this._id,
+        name: this.name,
+        email: this.email
+      },
+      createdAt: new Date()
+    };
+
+    await db.collection('orders').insertOne(order);
+
+    return db.collection('users').updateOne(
+      { _id: this._id },
+      {
+        $set: {
+          cart: {
+            items: []
+          }
+        }
+      }
+    );
+  }
+
+  // FETCH ORDERS OF ONE USER
+  static fetchOrders(userId) {
+    const db = getDb();
+
+    return db.collection('orders').find({
+      'user._id': new ObjectId(userId)
+    }).toArray();
   }
 }
 
