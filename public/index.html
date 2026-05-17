@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mongo Shop Console</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary">
+      <div class="brand">
+        <span class="brand-mark">M</span>
+        <div>
+          <h1>Mongo Shop</h1>
+          <p>Storefront and admin console</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" aria-label="Sections">
+        <button class="nav-tab active" type="button" data-view="shop">Shop</button>
+        <button class="nav-tab" type="button" data-view="admin">Admin</button>
+        <button class="nav-tab" type="button" data-view="customer">Customer</button>
+      </nav>
+
+      <section class="panel user-panel" aria-labelledby="active-user-title">
+        <div class="panel-heading">
+          <h2 id="active-user-title">Active User</h2>
+          <span id="userStatus" class="status-pill">Not loaded</span>
+        </div>
+
+        <form id="fetchUserForm" class="stacked-form">
+          <label for="activeUserId">User ID</label>
+          <div class="inline-field">
+            <input id="activeUserId" name="userId" type="text" placeholder="Paste user id" autocomplete="off">
+            <button class="icon-button" type="submit" title="Load user" aria-label="Load user">Go</button>
+          </div>
+        </form>
+
+        <div id="activeUserCard" class="user-card empty">
+          <strong>No user selected</strong>
+          <span>Create or load a user to manage cart and orders.</span>
+        </div>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Node + Express + MongoDB</p>
+          <h2 id="viewTitle">Shop</h2>
+        </div>
+        <div class="topbar-actions">
+          <button id="refreshProductsBtn" class="secondary-button" type="button">Refresh</button>
+        </div>
+      </header>
+
+      <section id="shopView" class="view active-view" aria-labelledby="shop-heading">
+        <div class="section-heading">
+          <div>
+            <h3 id="shop-heading">Products</h3>
+            <p>Browse products and add them to the active user's cart.</p>
+          </div>
+          <span id="productCount" class="metric">0 items</span>
+        </div>
+        <div id="productGrid" class="product-grid"></div>
+      </section>
+
+      <section id="adminView" class="view" aria-labelledby="admin-heading">
+        <div class="split-layout">
+          <section class="panel editor-panel">
+            <div class="panel-heading">
+              <h3 id="admin-heading">Product Editor</h3>
+              <button id="resetProductFormBtn" class="link-button" type="button">New product</button>
+            </div>
+
+            <form id="productForm" class="stacked-form">
+              <input id="productId" name="productId" type="hidden">
+
+              <label for="productTitle">Title</label>
+              <input id="productTitle" name="title" type="text" placeholder="Wireless Keyboard" required>
+
+              <label for="productPrice">Price</label>
+              <input id="productPrice" name="price" type="number" min="0" step="0.01" placeholder="49.99" required>
+
+              <label for="productDescription">Description</label>
+              <textarea id="productDescription" name="description" rows="5" placeholder="Short product details" required></textarea>
+
+              <button id="saveProductBtn" class="primary-button" type="submit">Create Product</button>
+            </form>
+          </section>
+
+          <section class="panel table-panel">
+            <div class="panel-heading">
+              <h3>Inventory</h3>
+              <span id="adminProductCount" class="status-pill">0 records</span>
+            </div>
+            <div id="adminProductList" class="admin-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="customerView" class="view" aria-labelledby="customer-heading">
+        <div class="split-layout">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3 id="customer-heading">Create User</h3>
+            </div>
+
+            <form id="userForm" class="stacked-form">
+              <label for="userName">Name</label>
+              <input id="userName" name="name" type="text" placeholder="Avery Stone" required>
+
+              <label for="userEmail">Email</label>
+              <input id="userEmail" name="email" type="email" placeholder="avery@example.com" required>
+
+              <button class="primary-button" type="submit">Create User</button>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Cart</h3>
+              <span id="cartCount" class="status-pill">0 items</span>
+            </div>
+            <div id="cartList" class="cart-list"></div>
+            <button id="placeOrderBtn" class="primary-button full-width" type="button">Place Order</button>
+          </section>
+        </div>
+
+        <section class="panel orders-panel">
+          <div class="panel-heading">
+            <h3>Orders</h3>
+            <button id="refreshOrdersBtn" class="link-button" type="button">Reload orders</button>
+          </div>
+          <div id="ordersList" class="orders-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="/script.js"></script>
+</body>
+</html>

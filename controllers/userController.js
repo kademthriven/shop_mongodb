@@ -5,13 +5,18 @@ exports.createUser = async (req, res) => {
   try {
     const { name, email } = req.body;
 
-    const user = new User(name, email);
-    const result = await user.save();
+    const user = new User({
+      name,
+      email
+    });
+
+    await user.save();
 
     res.status(201).json({
       success: true,
       message: 'User created successfully',
-      userId: result.insertedId
+      userId: user._id,
+      user
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -23,6 +28,13 @@ exports.fetchUserById = async (req, res) => {
     const userId = req.params.userId;
 
     const user = await User.findUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -40,14 +52,21 @@ exports.addToCart = async (req, res) => {
     const userData = await User.findUserById(userId);
     const product = await Product.findById(productId);
 
-    const user = new User(
-      userData.name,
-      userData.email,
-      userData._id,
-      userData.cart
-    );
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
 
-    await user.addToCart(product);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    await userData.addToCart(product);
 
     res.status(200).json({
       success: true,
@@ -59,36 +78,40 @@ exports.addToCart = async (req, res) => {
 };
 // controllers/userController.js
 exports.deleteCartItem = async (req, res) => {
-  const { userId, productId } = req.body;
+  try {
+    const { userId, productId } = req.body;
 
-  const userData = await User.findUserById(userId);
+    const user = await User.findUserById(userId);
 
-  const user = new User(
-    userData.name,
-    userData.email,
-    userData._id,
-    userData.cart
-  );
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
 
-  await user.deleteCartItem(productId);
+    await user.deleteCartItem(productId);
 
-  res.json({
-    success: true,
-    message: 'Product removed from cart'
-  });
+    res.json({
+      success: true,
+      message: 'Product removed from cart'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 exports.createOrder = async (req, res) => {
   try {
     const { userId } = req.body;
 
-    const userData = await User.findUserById(userId);
+    const user = await User.findUserById(userId);
 
-    const user = new User(
-      userData.name,
-      userData.email,
-      userData._id,
-      userData.cart
-    );
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
 
     await user.addOrder();
 

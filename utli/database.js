@@ -1,48 +1,37 @@
 require('dotenv').config();
 
 const dns = require('dns');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const mongoose = require('mongoose');
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const uri = process.env.MONGO_URI;
 const dbName = process.env.MONGO_DB_NAME || 'shop';
 
-let _db;
-let _client;
-
 const mongoConnect = async (callback) => {
   try {
-    if (_db) {
+    if (mongoose.connection.readyState === 1) {
       if (callback) {
-        callback(_client);
+        callback(mongoose.connection);
       }
-      return _client;
+      return mongoose.connection;
     }
 
     if (!uri) {
       throw new Error('MONGO_URI is not defined. Add it to your .env file.');
     }
 
-    _client = new MongoClient(uri, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-      }
+    await mongoose.connect(uri, {
+      dbName
     });
 
-    await _client.connect();
-    await _client.db('admin').command({ ping: 1 });
-    _db = _client.db(dbName);
-
-    console.log('Connected to MongoDB!');
+    console.log('Connected to MongoDB with Mongoose!');
 
     if (callback) {
-      callback(_client);
+      callback(mongoose.connection);
     }
 
-    return _client;
+    return mongoose.connection;
   } catch (err) {
     console.dir(err);
     throw err;
@@ -50,10 +39,10 @@ const mongoConnect = async (callback) => {
 };
 
 const getDb = () => {
-  if (_db) {
-    return _db;
+  if (mongoose.connection.readyState === 1 && mongoose.connection.db) {
+    return mongoose.connection.db;
   }
-  throw new Error("No database found");
+  throw new Error('No database found');
 };
 
 module.exports = {

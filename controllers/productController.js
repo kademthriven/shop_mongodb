@@ -4,13 +4,18 @@ exports.createProduct = async (req, res) => {
   try {
     const { title, price, description } = req.body;
 
-    const product = new Product(title, price, description);
+    const product = new Product({
+      title,
+      price,
+      description
+    });
 
     await product.save();
 
     res.status(201).json({
       success: true,
-      message: 'Product created successfully'
+      message: 'Product created successfully',
+      product
     });
 
   } catch (err) {
@@ -70,6 +75,13 @@ exports.fetchSingleProduct = async (req, res) => {
 
     const product = await Product.findById(prodId);
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
     res.status(200).json({
       success: true,
       product
@@ -92,18 +104,30 @@ exports.updateProduct = async (req, res) => {
 
     const { title, price, description } = req.body;
 
-    const updatedProduct = new Product(
-      title,
-      price,
-      description,
-      prodId
+    const updatedProduct = await Product.findByIdAndUpdate(
+      prodId,
+      {
+        title,
+        price,
+        description
+      },
+      {
+        new: true,
+        runValidators: true
+      }
     );
 
-    await updatedProduct.save();
+    if (!updatedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Product updated successfully'
+      message: 'Product updated successfully',
+      product: updatedProduct
     });
 
   } catch (err) {
@@ -121,7 +145,14 @@ exports.deleteProduct = async (req, res) => {
   try {
     const prodId = req.params.productId;
 
-    await Product.deleteById(prodId);
+    const deletedProduct = await Product.deleteById(prodId);
+
+    if (!deletedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
 
     res.status(200).json({
       success: true,

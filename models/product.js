@@ -1,62 +1,35 @@
-const { ObjectId } = require('mongodb');
-const getDb = require('../utli/database').getDb;
+const mongoose = require('mongoose');
 
-class Product {
-  constructor(title, price, description, id) {
-    this.title = title;
-    this.price = price;
-    this.description = description;
-
-    if (id) {
-      this._id = new ObjectId(id);
+const productSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    description: {
+      type: String,
+      required: true,
+      trim: true
     }
+  },
+  {
+    collection: 'products',
+    timestamps: true
   }
+);
 
-  async save() {
-    const db = getDb();
+productSchema.statics.fetchAll = function () {
+  return this.find().sort({ createdAt: -1 });
+};
 
-    // UPDATE
-    if (this._id) {
-      return db.collection('products').updateOne(
-        { _id: this._id },
-        {
-          $set: {
-            title: this.title,
-            price: this.price,
-            description: this.description
-          }
-        }
-      );
-    }
+productSchema.statics.deleteById = function (productId) {
+  return this.findByIdAndDelete(productId);
+};
 
-    // CREATE
-    return db.collection('products').insertOne(this);
-  }
-
-  // SHOP SIDE FETCH PRODUCTS
-  static fetchAll() {
-    const db = getDb();
-
-    return db.collection('products').find().toArray();
-  }
-
-  // FETCH SINGLE PRODUCT
-  static findById(prodId) {
-    const db = getDb();
-
-    return db.collection('products').findOne({
-      _id: new ObjectId(prodId)
-    });
-  }
-
-  // DELETE PRODUCT
-  static deleteById(prodId) {
-    const db = getDb();
-
-    return db.collection('products').deleteOne({
-      _id: new ObjectId(prodId)
-    });
-  }
-}
-
-module.exports = Product;
+module.exports = mongoose.model('Product', productSchema);
