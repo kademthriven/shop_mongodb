@@ -81,6 +81,13 @@ exports.deleteCartItem = async (req, res) => {
   try {
     const { userId, productId } = req.body;
 
+    if (!userId || !productId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User id and product id are required'
+      });
+    }
+
     const user = await User.findUserById(userId);
 
     if (!user) {
@@ -94,7 +101,8 @@ exports.deleteCartItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Product removed from cart'
+      message: 'Product removed from cart',
+      user
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

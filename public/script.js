@@ -435,15 +435,17 @@ document.body.addEventListener('click', async (event) => {
     }
 
     if (action === 'remove-cart') {
-      await api('/cart', {
-        method: 'DELETE',
+      const data = await api('/cart/delete-item', {
+        method: 'POST',
         body: JSON.stringify({
           userId: state.activeUser._id,
           productId: id
         })
       });
 
-      await loadUser(state.activeUser._id);
+      state.activeUser = data.user || state.activeUser;
+      renderUser();
+      await loadOrders();
       showToast('Removed from cart');
     }
   } catch (error) {
